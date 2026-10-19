@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推し 配信スケジュール</title>
+    <!-- スマホのホーム画面に追加したときにアプリ風に見せる設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダー部分 -->
+        <header class="app-header">
+            <h1>推し 配信スケジュール</h1>
+            <div class="view-tabs">
+                <button class="tab-btn active" id="weekly-tab">週</button>
+                <button class="tab-btn" id="monthly-tab">月</button>
+            </div>
+        </header>
+
+        <!-- スタッツ・情報バー -->
+        <section class="stats-bar">
+            <div class="stat-badge">配信数: <span id="total-stream">0</span>件</div>
+            <div class="stat-badge">更新日時: <span id="update-time">読込中...</span></div>
+        </section>
+
+        <!-- カレンダー本体の表示エリア -->
+        <main class="calendar-main">
+            <div id="schedule-list" class="schedule-list">
+                <!-- ここにGitHub Actionsで取得したJSONデータがJavaScriptで自動で差し込まれます -->
+                <p class="loading-text">スケジュールを読み込んでいます...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
