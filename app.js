@@ -14,29 +14,22 @@ function initUI() {
     document.getElementById("next-btn").addEventListener("click", () => navigateDate(1));
     document.getElementById("today-btn").addEventListener("click", () => { currentDate = new Date(); render(); });
     
-    const closeBtn = document.getElementById("modal-close");
-    if (closeBtn) closeBtn.addEventListener("click", closeModal);
-    
-    const overlay = document.getElementById("modal-overlay");
-    if (overlay) {
-        overlay.addEventListener("click", (e) => {
-            if (e.target.id === "modal-overlay") closeModal();
-        });
-    }
+    document.getElementById("modal-close").addEventListener("click", closeModal);
+    document.getElementById("modal-overlay").addEventListener("click", (e) => {
+        if (e.target.id === "modal-overlay") closeModal();
+    });
 }
 
 async function fetchSchedule() {
     try {
-        // 相対パスを絶対パス風（./data/...）にして確実に読み込む
-        const response = await fetch("./data/schedule.json?" + new Date().getTime());
-        if (!response.ok) throw new Error("スケジュールファイルの取得に失敗しました");
+        // パスを確実に指定
+        const response = await fetch("data/schedule.json?" + new Date().getTime());
+        if (!response.ok) throw new Error("Load failed");
         const data = await response.json();
         allVideos = data.videos || [];
-        console.log("Loaded videos:", allVideos.length);
         render();
     } catch (e) {
         console.error(e);
-        // エラー時でも画面が止まらないようにする
         allVideos = [];
         render();
     }
@@ -51,11 +44,11 @@ function switchView(view) {
     render();
 }
 
-function navigateDate(direction) {
+function navigateDate(dir) {
     if (currentView === 'week') {
-        currentDate.setDate(currentDate.getDate() + (direction * 7));
+        currentDate.setDate(currentDate.getDate() + (dir * 7));
     } else {
-        currentDate.setMonth(currentDate.getMonth() + direction);
+        currentDate.setMonth(currentDate.getMonth() + dir);
     }
     render();
 }
@@ -79,10 +72,8 @@ function categorizeTitle(title) {
 }
 
 function renderStats() {
-    const countEl = document.getElementById("stat-count");
-    const hoursEl = document.getElementById("stat-hours");
-    if (countEl) countEl.textContent = allVideos.length;
-    if (hoursEl) hoursEl.textContent = (allVideos.length * 2.5).toFixed(1);
+    document.getElementById("stat-count").textContent = allVideos.length;
+    document.getElementById("stat-hours").textContent = (allVideos.length * 2.5).toFixed(1);
 
     const gameCounts = {};
     allVideos.forEach(v => {
@@ -91,15 +82,13 @@ function renderStats() {
     });
 
     const tagsContainer = document.getElementById("game-tags-container");
-    if (tagsContainer) {
-        tagsContainer.innerHTML = "";
-        Object.entries(gameCounts).forEach(([game, hours]) => {
-            const tag = document.createElement("div");
-            tag.className = "game-tag";
-            tag.textContent = `${game} ${hours}h`;
-            tagsContainer.appendChild(tag);
-        });
-    }
+    tagsContainer.innerHTML = "";
+    Object.entries(gameCounts).forEach(([game, hours]) => {
+        const tag = document.createElement("div");
+        tag.className = "game-tag";
+        tag.textContent = `${game} ${hours}h`;
+        tagsContainer.appendChild(tag);
+    });
 }
 
 function renderWeekView() {
@@ -107,81 +96,75 @@ function renderWeekView() {
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 6);
 
-    const rangeText = document.getElementById("date-range-text");
-    if (rangeText) {
-        rangeText.textContent = `${startOfWeek.getFullYear()}年 ${startOfWeek.getMonth()+1}/${startOfWeek.getDate()} - ${endOfWeek.getMonth()+1}/${endOfWeek.getDate()}`;
+    document.getElementById("date-range-text").textContent = 
+        `${startOfWeek.getFullYear()}年 ${startOfWeek.getMonth()+1}/${startOfWeek.getDate()} - ${endOfWeek.getMonth()+1}/${endOfWeek.getDate()}`;
+
+    // 時間軸
+    const timeAxis = document.getElementById("time-axis");
+    timeAxis.innerHTML = "";
+    for (let h = 0; h < 24; h++) {
+        const lbl = document.createElement("div");
+        lbl.className = "time-lbl";
+        lbl.textContent = h;
+        timeAxis.appendChild(lbl);
     }
 
-    const timeAxis = document.querySelector(".time-axis");
-    if (timeAxis) {
-        timeAxis.innerHTML = "";
-        for (let h = 0; h < 24; h++) {
-            const lbl = document.createElement("div");
-            lbl.className = "time-label";
-            lbl.textContent = h;
-            timeAxis.appendChild(lbl);
-        }
-    }
-
+    // 曜日
     const headerRow = document.getElementById("week-header-row");
-    if (headerRow) {
-        headerRow.innerHTML = "<div></div>";
-        const days = ['月', '火', '水', '木', '金', '土', '日'];
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(startOfWeek);
-            d.setDate(d.getDate() + i);
-            const div = document.createElement("div");
-            div.className = "day-header";
-            div.innerHTML = `<div class="date-num">${d.getDate()}</div><div class="sub-h">${days[i]}</div>`;
-            headerRow.appendChild(div);
-        }
+    headerRow.innerHTML = "<div></div>";
+    const days = ['月', '火', '水', '木', '金', '土', '日'];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek);
+        d.setDate(d.getDate() + i);
+        const div = document.createElement("div");
+        div.className = "day-cell";
+        div.innerHTML = `<div class="num">${d.getDate()}</div><div class="sub">${days[i]}</div>`;
+        headerRow.appendChild(div);
     }
 
+    // グリッド
     const grid = document.getElementById("week-grid");
-    if (grid) {
-        grid.innerHTML = "";
-        for (let i = 0; i < 7; i++) {
-            const colDate = new Date(startOfWeek);
-            colDate.setDate(colDate.getDate() + i);
-            
-            const col = document.createElement("div");
-            col.className = "week-col";
+    grid.innerHTML = "";
+    for (let i = 0; i < 7; i++) {
+        const colDate = new Date(startOfWeek);
+        colDate.setDate(colDate.getDate() + i);
+        
+        const col = document.createElement("div");
+        col.className = "week-col";
 
-            const dayVideos = allVideos.filter(v => {
-                const vd = new Date(v.publishedAt);
-                return vd.toDateString() === colDate.toDateString();
-            });
+        const dayVideos = allVideos.filter(v => {
+            const vd = new Date(v.publishedAt);
+            return vd.toDateString() === colDate.toDateString();
+        });
 
-            dayVideos.forEach(v => {
-                const vd = new Date(v.publishedAt);
-                const startHour = vd.getHours() + (vd.getMinutes() / 60);
-                const topPx = startHour * 40;
+        dayVideos.forEach(v => {
+            const vd = new Date(v.publishedAt);
+            const startHour = vd.getHours() + (vd.getMinutes() / 60);
+            const topPx = startHour * 40;
 
-                const block = document.createElement("div");
-                block.className = "stream-block";
-                block.style.top = `${topPx}px`;
-                block.style.height = `80px`;
-                if (v.thumbnails) block.style.backgroundImage = `url(${v.thumbnails})`;
+            const card = document.createElement("div");
+            card.className = "stream-card";
+            card.style.top = `${topPx}px`;
+            card.style.height = `80px`;
+            if (v.thumbnails) card.style.backgroundImage = `url(${v.thumbnails})`;
 
-                const timeStr = `${String(vd.getHours()).padStart(2,'0')}:${String(vd.getMinutes()).padStart(2,'0')}`;
-                block.innerHTML = `
-                    <div class="stream-time-tag">${timeStr}</div>
-                    <div class="stream-title-text">${escapeHtml(v.title)}</div>
-                `;
-                block.addEventListener("click", () => openModal(v));
-                col.appendChild(block);
-            });
+            const timeStr = `${String(vd.getHours()).padStart(2,'0')}:${String(vd.getMinutes()).padStart(2,'0')}`;
+            card.innerHTML = `
+                <div class="time-tag">${timeStr}</div>
+                <div class="title-txt">${escapeHtml(v.title)}</div>
+            `;
+            card.addEventListener("click", () => openModal(v));
+            col.appendChild(card);
+        });
 
-            grid.appendChild(col);
-        }
+        grid.appendChild(col);
     }
 }
 
 function renderMonthView() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const rangeText = document.getElementById("date-range-text");
-    if (rangeText) rangeText.textContent = `${year}年 ${month + 1}月`;
+    document.getElementById("date-range-text").textContent = `${year}年 ${month + 1}月`;
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -190,30 +173,28 @@ function renderMonthView() {
     if (startDayIdx === -1) startDayIdx = 6;
 
     const grid = document.getElementById("month-grid");
-    if (grid) {
-        grid.innerHTML = "";
-        for (let i = 0; i < startDayIdx; i++) {
-            const emptyCell = document.createElement("div");
-            emptyCell.className = "month-cell";
-            grid.appendChild(emptyCell);
-        }
+    grid.innerHTML = "";
+    for (let i = 0; i < startDayIdx; i++) {
+        const emptyCell = document.createElement("div");
+        emptyCell.className = "m-cell";
+        grid.appendChild(emptyCell);
+    }
 
-        for (let day = 1; day <= lastDay.getDate(); day++) {
-            const cellDate = new Date(year, month, day);
-            const cell = document.createElement("div");
-            cell.className = "month-cell";
-            cell.innerHTML = `<div class="cell-num">${String(day).padStart(2,'0')}</div>`;
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+        const cellDate = new Date(year, month, day);
+        const cell = document.createElement("div");
+        cell.className = "m-cell";
+        cell.innerHTML = `<div class="m-num">${String(day).padStart(2,'0')}</div>`;
 
-            const dayVideos = allVideos.filter(v => new Date(v.publishedAt).toDateString() === cellDate.toDateString());
-            if (dayVideos.length > 0 && dayVideos[0].thumbnails) {
-                const img = document.createElement("img");
-                img.className = "month-thumb-img";
-                img.src = dayVideos[0].thumbnails;
-                img.addEventListener("click", () => openModal(dayVideos[0]));
-                cell.appendChild(img);
-            }
-            grid.appendChild(cell);
+        const dayVideos = allVideos.filter(v => new Date(v.publishedAt).toDateString() === cellDate.toDateString());
+        if (dayVideos.length > 0 && dayVideos[0].thumbnails) {
+            const img = document.createElement("img");
+            img.className = "m-thumb";
+            img.src = dayVideos[0].thumbnails;
+            img.addEventListener("click", () => openModal(dayVideos[0]));
+            cell.appendChild(img);
         }
+        grid.appendChild(cell);
     }
 }
 
@@ -234,15 +215,13 @@ function openModal(video) {
     document.getElementById("modal-link").href = `https://www.youtube.com/watch?v=${video.id}`;
 
     const badges = document.getElementById("modal-badges");
-    if (badges) badges.innerHTML = `<span class="modal-badge">${cat}</span>`;
+    badges.innerHTML = `<span class="modal-badge">${cat}</span>`;
 
-    const overlay = document.getElementById("modal-overlay");
-    if (overlay) overlay.classList.remove("hidden");
+    document.getElementById("modal-overlay").classList.remove("hidden");
 }
 
 function closeModal() {
-    const overlay = document.getElementById("modal-overlay");
-    if (overlay) overlay.classList.add("hidden");
+    document.getElementById("modal-overlay").classList.add("hidden");
 }
 
 function escapeHtml(str) {
