@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initUI() {
-    // PC & スマホ両方のボタンにイベントを設定
     bindClick("btn-week", () => switchView('week'));
     bindClick("btn-month", () => switchView('month'));
     bindClick("btn-week-m", () => switchView('week'));
@@ -86,29 +85,38 @@ function render() {
 
 function categorizeTitle(title) {
     const t = title.toUpperCase();
-    if (t.includes("OW") || t.includes("OVERWATCH")) return "OW";
+    if (t.includes("OW") || t.includes("OVERWATCH") || t.includes("オーバーウォッチ")) return "OW";
     if (t.includes("APEX")) return "APEX";
-    if (t.includes("VALORANT")) return "VALORANT";
+    if (t.includes("VALORANT") || t.includes("ヴァロ")) return "VALORANT";
     if (t.includes("スプラ")) return "スプラ";
     return "配信";
 }
 
+// 実際の配信分（durationMinutes）に基づく正確な合計時間の算出
 function renderStats() {
     const countEl = document.getElementById("stat-count");
     const hoursEl = document.getElementById("stat-hours");
-    if (countEl) countEl.textContent = allVideos.length;
-    if (hoursEl) hoursEl.textContent = (allVideos.length * 2.5).toFixed(1);
 
-    const gameCounts = {};
+    if (countEl) countEl.textContent = allVideos.length;
+
+    let totalMinutes = 0;
+    const gameMinutes = {};
+
     allVideos.forEach(v => {
+        const mins = v.durationMinutes || 120;
+        totalMinutes += mins;
+
         const cat = categorizeTitle(v.title);
-        gameCounts[cat] = (gameCounts[cat] || 0) + 2.5;
+        gameMinutes[cat] = (gameMinutes[cat] || 0) + mins;
     });
+
+    if (hoursEl) hoursEl.textContent = (totalMinutes / 60).toFixed(1);
 
     const tagsContainer = document.getElementById("game-tags-container");
     if (tagsContainer) {
         tagsContainer.innerHTML = "";
-        Object.entries(gameCounts).forEach(([game, hours]) => {
+        Object.entries(gameMinutes).forEach(([game, mins]) => {
+            const hours = (mins / 60).toFixed(1);
             const tag = document.createElement("div");
             tag.className = "game-tag";
             tag.textContent = `${game} ${hours}h`;
@@ -117,6 +125,7 @@ function renderStats() {
     }
 }
 
+// 週表示 (バーティカルの高さと位置を実際の配信時間から算出)
 function renderWeekView() {
     const startOfWeek = getStartOfWeek(new Date(currentDate));
     const endOfWeek = new Date(startOfWeek);
@@ -146,9 +155,15 @@ function renderWeekView() {
         for (let i = 0; i < 7; i++) {
             const d = new Date(startOfWeek);
             d.setDate(d.getDate() + i);
+
+            // その日の合計配信時間を計算してヘッダーに表示
+            const dayVideos = allVideos.filter(v => new Date(v.publishedAt).toDateString() === d.toDateString());
+            const dayMins = dayVideos.reduce((sum, v) => sum + (v.durationMinutes || 120), 0);
+            const dayHoursStr = dayMins > 0 ? `${(dayMins / 60).toFixed(1)}h` : '';
+
             const div = document.createElement("div");
             div.className = "day-cell";
-            div.innerHTML = `<div class="num">${d.getDate()}</div><div class="sub">${days[i]}</div>`;
+            div.innerHTML = `<div class="num">${d.getDate()}</div><div class="sub">${days[i]}</div><div class="sub">${dayHoursStr}</div>`;
             headerRow.appendChild(div);
         }
     }
@@ -171,17 +186,25 @@ function renderWeekView() {
             dayVideos.forEach(v => {
                 const vd = new Date(v.publishedAt);
                 const startHour = vd.getHours() + (vd.getMinutes() / 60);
+                
+                // 1時間 = 40px で計算 (40px/60分)
                 const topPx = startHour * 40;
+                
+                // 実際の配信分（durationMinutes）に応じた伸縮枠（最低40px）
+                const durationMins = v.durationMinutes || 120;
+                const heightPx = Math.max(30, (durationMins / 60) * 40);
 
                 const card = document.createElement("div");
                 card.className = "stream-card";
                 card.style.top = `${topPx}px`;
-                card.style.height = `80px`;
+                card.style.height = `${heightPx}px`;
                 if (v.thumbnails) card.style.backgroundImage = `url(${v.thumbnails})`;
 
                 const timeStr = `${String(vd.getHours()).padStart(2,'0')}:${String(vd.getMinutes()).padStart(2,'0')}`;
+                const hoursLenStr = `${(durationMins / 60).toFixed(1)}h`;
+
                 card.innerHTML = `
-                    <div class="time-tag">${timeStr}</div>
+                    <div class="time-tag">${timeStr} (${hoursLenStr})</div>
                     <div class="title-txt">${escapeHtml(v.title)}</div>
                 `;
                 card.addEventListener("click", () => openModal(v));
@@ -245,18 +268,29 @@ function getStartOfWeek(d) {
 function openModal(video) {
     const vd = new Date(video.publishedAt);
     const cat = categorizeTitle(video.title);
+    const mins = video.durationMinutes || 120;
+    const hoursStr = (mins / 60).toFixed(1);
 
     document.getElementById("modal-thumb").src = video.thumbnails || "";
     document.getElementById("modal-title").textContent = video.title;
     document.getElementById("modal-date").textContent = vd.toLocaleDateString("ja-JP");
     document.getElementById("modal-time").textContent = vd.toLocaleTimeString("ja-JP", {hour: '2-digit', minute:'2-digit'});
+    
+    const detailsContainer = document.querySelector(".modal-details");
+    if (detailsContainer) {
+        detailsContainer.innerHTML = `
+            <div class="detail-row"><span>日付</span><strong>${vd.toLocaleDateString("ja-JP")}</strong></div>
+            <div class="detail-row"><span>時間</span><strong>${vd.toLocaleTimeString("ja-JP", {hour: '2-digit', minute:'2-digit'})}</strong></div>
+            <div class="detail-row"><span>長さ</span><strong>約${hoursStr}時間 (${mins}分)</strong></div>
+        `;
+    }
+
     document.getElementById("modal-link").href = `https://www.youtube.com/watch?v=${video.id}`;
 
     const badges = document.getElementById("modal-badges");
-    if (badges) badges.innerHTML = `<span class="modal-badge">${cat}</span>`;
+    badges.innerHTML = `<span class="modal-badge">${cat}</span>`;
 
-    const overlay = document.getElementById("modal-overlay");
-    if (overlay) overlay.classList.remove("hidden");
+    document.getElementById("modal-overlay").classList.remove("hidden");
 }
 
 function closeModal() {
