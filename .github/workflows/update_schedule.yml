@@ -2,16 +2,15 @@ name: Update YouTube Schedule
 
 on:
   schedule:
-    # 3時間ごとに自動実行（cron形式）
     - cron: '0 */3 * * *'
-  workflow_dispatch: # 手動でも実行できるようにする
+  workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
