@@ -3,61 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小柳ロウ 配信スケジュール</title>
+    <title>葛葉 配信スケジュール</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- ヘッダー -->
-        <header class="app-header">
-            <h1 class="header-title">小柳ロウ <span class="sub">配信スケジュール</span></h1>
-            <div class="view-tabs">
-                <button class="tab-btn active" id="btn-week">週</button>
-                <button class="tab-btn" id="btn-month">月</button>
+    <div class="dashboard-layout">
+        <!-- PC時：左側サイドパネル / スマホ時：上部配置 -->
+        <aside class="side-panel">
+            <header class="app-header">
+                <h1 class="header-title">小柳ロウ<br><span class="sub">配信スケジュール</span></h1>
+                <div class="view-tabs mobile-only-tabs">
+                    <button class="tab-btn active" id="btn-week-m">週</button>
+                    <button class="tab-btn" id="btn-month-m">月</button>
+                </div>
+            </header>
+
+            <!-- 日付ナビ（スマホ表示用） -->
+            <div class="date-nav mobile-nav">
+                <button class="nav-btn" id="prev-btn-m">&lt;</button>
+                <div class="date-text" id="date-range-text-m">2026年 10/12 - 10/18</div>
+                <button class="today-btn" id="today-btn-m">今日</button>
+                <button class="nav-btn" id="next-btn-m">&gt;</button>
             </div>
-        </header>
 
-        <!-- 日付切り替えナビ -->
-        <section class="date-nav">
-            <button class="nav-btn" id="prev-btn">&lt;</button>
-            <div class="date-text" id="date-range-text">2026年 10/12 - 10/18</div>
-            <button class="today-btn" id="today-btn">今日</button>
-            <button class="nav-btn" id="next-btn">&gt;</button>
-        </section>
+            <!-- スタッツボックス -->
+            <div class="stats-box">
+                <div class="stat-pills-row">
+                    <div class="stat-pill"><span id="stat-count">0</span><small>回</small></div>
+                    <div class="stat-pill"><span id="stat-hours">0</span><small>時間</small></div>
+                    <div class="stat-pill"><span>0</span><small>件</small></div>
+                </div>
+                <div class="game-tags-scroll" id="game-tags-container"></div>
+            </div>
 
-        <!-- スタッツバー -->
-        <section class="stats-bar">
-            <div class="stat-pill"><span id="stat-count">0</span><small>回</small></div>
-            <div class="stat-pill"><span id="stat-hours">0</span><small>時間</small></div>
-            <div class="stat-pill"><span>0</span><small>件</small></div>
-            <div class="game-tags" id="game-tags-container"></div>
-        </section>
+            <!-- 締め切りメモ帳カード -->
+            <div class="memo-card">
+                <div class="memo-title">締切が近いもの</div>
+                <div class="memo-item">
+                    <span class="due-badge">あと6日</span>
+                    <div class="memo-content">
+                        <strong>ライブ追加グッズ受注販売</strong>
+                        <small>10/25 (日) 23:59</small>
+                    </div>
+                </div>
+                <div class="memo-item">
+                    <span class="due-badge secondary">あと18日</span>
+                    <div class="memo-content">
+                        <strong>にじUFJ</strong>
+                        <small>11/6 (金) 23:59</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
-        <!-- 手帳紙面エリア -->
-        <main class="paper-sheet">
-            <div class="clip-decor"></div>
-
-            <!-- 週表示 (バーティカル) -->
-            <div id="view-week" class="calendar-view">
-                <div class="week-header-row" id="week-header-row"></div>
-                <div class="week-body">
-                    <div class="time-axis" id="time-axis"></div>
-                    <div class="week-grid" id="week-grid"></div>
+        <!-- PC時：右側メインエリア / スマホ時：メインカレンダー -->
+        <main class="main-calendar-area">
+            <!-- PC用ヘッダーナビ -->
+            <div class="pc-top-bar">
+                <div class="date-nav">
+                    <button class="nav-btn" id="prev-btn">&lt;</button>
+                    <div class="date-text" id="date-range-text">2026年 10/12 - 10/18</div>
+                    <button class="today-btn" id="today-btn">今日</button>
+                    <button class="nav-btn" id="next-btn">&gt;</button>
+                </div>
+                <div class="view-tabs pc-only-tabs">
+                    <button class="tab-btn active" id="btn-week">週</button>
+                    <button class="tab-btn" id="btn-month">月</button>
                 </div>
             </div>
 
-            <!-- 月表示 (カレンダー) -->
-            <div id="view-month" class="calendar-view hidden">
-                <div class="month-header-row">
-                    <div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div><div>日</div>
+            <!-- 手帳用紙本体 -->
+            <div class="paper-sheet">
+                <div class="clip-decor"></div>
+
+                <!-- 週表示 (バーティカル) -->
+                <div id="view-week" class="calendar-view">
+                    <div class="week-header-row" id="week-header-row"></div>
+                    <div class="week-body">
+                        <div class="time-axis" id="time-axis"></div>
+                        <div class="week-grid" id="week-grid"></div>
+                    </div>
                 </div>
-                <div class="month-grid" id="month-grid"></div>
+
+                <!-- 月表示 (カレンダー) -->
+                <div id="view-month" class="calendar-view hidden">
+                    <div class="month-header-row">
+                        <div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div><div>日</div>
+                    </div>
+                    <div class="month-grid" id="month-grid"></div>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- 配信詳細モーダル (初期状態は hidden で非表示) -->
+    <!-- アーカイブカード詳細モーダル -->
     <div class="modal-overlay hidden" id="modal-overlay">
         <div class="modal-card">
             <button class="modal-close" id="modal-close">&times;</button>
