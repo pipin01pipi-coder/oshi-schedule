@@ -3,36 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>推し 配信スケジュール</title>
-    <!-- スマホのホーム画面に追加したときにアプリ風に見せる設定 -->
+    <title>配信スケジュール</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
-        <!-- ヘッダー部分 -->
+        <!-- ヘッダーエリア -->
         <header class="app-header">
-            <h1>推し 配信スケジュール</h1>
+            <div class="header-left">
+                <h1 class="title">小柳ロウ <span class="subtitle">配信スケジュール</span></h1>
+            </div>
             <div class="view-tabs">
-                <button class="tab-btn active" id="weekly-tab">週</button>
-                <button class="tab-btn" id="monthly-tab">月</button>
+                <button class="tab-btn active" id="btn-week">週</button>
+                <button class="tab-btn" id="btn-month">月</button>
             </div>
         </header>
 
-        <!-- スタッツ・情報バー -->
-        <section class="stats-bar">
-            <div class="stat-badge">配信数: <span id="total-stream">0</span>件</div>
-            <div class="stat-badge">更新日時: <span id="update-time">読込中...</span></div>
+        <!-- 日付ナビゲーション -->
+        <section class="date-nav">
+            <button class="nav-arrow" id="prev-btn">&lt;</button>
+            <div class="date-display" id="date-range-text">2026年 10/12 - 10/18</div>
+            <button class="today-btn" id="today-btn">今日</button>
+            <button class="nav-arrow" id="next-btn">&gt;</button>
         </section>
 
-        <!-- カレンダー本体の表示エリア -->
-        <main class="calendar-main">
-            <div id="schedule-list" class="schedule-list">
-                <!-- ここにGitHub Actionsで取得したJSONデータがJavaScriptで自動で差し込まれます -->
-                <p class="loading-text">スケジュールを読み込んでいます...</p>
+        <!-- スタッツ情報バー -->
+        <section class="stats-bar">
+            <div class="stat-pill"><span class="num" id="stat-count">0</span><span class="label">回</span></div>
+            <div class="stat-pill"><span class="num" id="stat-hours">0</span><span class="label">時間</span></div>
+            <div class="stat-pill"><span class="num" id="stat-posts">0</span><span class="label">件</span></div>
+            <div class="game-tags-scroll" id="game-tags-container">
+                <!-- JSでゲーム別集計タグ（OW 37.5h など）が入ります -->
+            </div>
+        </section>
+
+        <!-- メインコンテンツ表示エリア -->
+        <main class="calendar-paper">
+            <!-- クリップ（飾り） -->
+            <div class="paper-clip"></div>
+
+            <!-- 週表示（バーティカルカレンダー） -->
+            <div id="view-week" class="calendar-view">
+                <div class="week-header-row" id="week-header-row">
+                    <!-- 曜日ヘッダー -->
+                </div>
+                <div class="week-body" id="week-body">
+                    <div class="time-axis">
+                        <!-- 1〜23時の時間軸 -->
+                    </div>
+                    <div class="week-grid" id="week-grid">
+                        <!-- 7日分の列 & 配信枠ブロック -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 月表示（グリッドカレンダー） -->
+            <div id="view-month" class="calendar-view hidden">
+                <div class="month-header-row">
+                    <div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div><div>日</div>
+                </div>
+                <div class="month-grid" id="month-grid">
+                    <!-- 1か月分のマス目 & サムネイル -->
+                </div>
             </div>
         </main>
+    </div>
+
+    <!-- 配信詳細モーダル（ポップアップ） -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <div class="modal-badges" id="modal-badges"></div>
+            <img class="modal-thumb" id="modal-thumb" src="" alt="サムネイル">
+            <h2 class="modal-title" id="modal-title"></h2>
+            
+            <div class="modal-details">
+                <div class="detail-row"><span class="detail-label">日付</span><span id="modal-date"></span></div>
+                <div class="detail-row"><span class="detail-label">時間</span><span id="modal-time"></span></div>
+                <div class="detail-row"><span class="detail-label">長さ</span><span id="modal-duration"></span></div>
+            </div>
+
+            <a class="modal-link-btn" id="modal-link" href="#" target="_blank">YouTubeの枠を開く ↗</a>
+        </div>
     </div>
 
     <script src="app.js"></script>
