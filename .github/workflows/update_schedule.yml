@@ -24,8 +24,9 @@ jobs:
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           CHANNEL_ID: 'UCSFCh5NL4qXrAy9u-u2lX3g'
-        run: python scripts/fetch_schedule.py
+        run: python fetch_schedule.py
 
+        
       - name: Commit and push if changed
         run: |
           git config --global user.name "github-actions[bot]"
