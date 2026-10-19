@@ -420,6 +420,7 @@ body {
     font-weight: bold;
 }
 
+/* モーダルが初期状態で表示されてしまうのを防ぐための一行 */
 .hidden {
     display: none !important;
 }
