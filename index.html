@@ -37,24 +37,16 @@
                 <div class="game-tags-scroll" id="game-tags-container"></div>
             </div>
 
-            <!-- 締め切りメモ帳カード -->
+           <!-- 締め切りメモ帳カード（手動追加機能付き） -->
             <div class="memo-card">
-                <div class="memo-title">締切が近いもの</div>
-                <div class="memo-item">
-                    <span class="due-badge">あと6日</span>
-                    <div class="memo-content">
-                        <strong>ライブ追加グッズ受注販売</strong>
-                        <small>10/25 (日) 23:59</small>
-                    </div>
+                <div class="memo-header-row">
+                    <div class="memo-title">締切が近いもの・メモ</div>
+                    <button class="memo-add-btn" id="open-memo-modal">+ 追加</button>
                 </div>
-                <div class="memo-item">
-                    <span class="due-badge secondary">あと18日</span>
-                    <div class="memo-content">
-                        <strong>にじUFJ</strong>
-                        <small>11/6 (金) 23:59</small>
-                    </div>
+                <div class="memo-list" id="memo-list-container">
+                    <!-- JSで動的に追加したメモがここに表示されます -->
                 </div>
-            </div>
+            </div> 
         </aside>
 
         <!-- PC時：右側メインエリア / スマホ時：メインカレンダー -->
@@ -112,6 +104,29 @@
             </div>
 
             <a class="modal-btn" id="modal-link" href="#" target="_blank">YouTubeの枠を開く ↗</a>
+        </div>
+    </div>
+<!-- メモ追加モーダル -->
+    <div class="modal-overlay hidden" id="memo-modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" id="memo-modal-close">&times;</button>
+            <h2 class="modal-title">新しいメモ・締切を追加</h2>
+            
+            <div class="memo-form">
+                <div class="form-group">
+                    <label>タイトル（例: グッズ受注）</label>
+                    <input type="text" id="memo-input-title" placeholder="イベントや締切の名称">
+                </div>
+                <div class="form-group">
+                    <label>日時・期限（例: 10/25 (日) 23:59）</label>
+                    <input type="text" id="memo-input-date" placeholder="11/6 (金) 23:59">
+                </div>
+                <div class="form-group">
+                    <label>あと何日？（例: あと6日）</label>
+                    <input type="text" id="memo-input-badge" placeholder="あと6日">
+                </div>
+                <button class="modal-btn" id="memo-save-btn">追加する</button>
+            </div>
         </div>
     </div>
 
