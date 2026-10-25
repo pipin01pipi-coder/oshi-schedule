@@ -509,6 +509,150 @@ body {
     font-size: 0.85rem;
     font-weight: bold;
 }
+/* --- 締切・メモ部分の可愛いUI --- */
+.memo-card {
+    background: var(--yellow-memo);
+    border: 1.5px solid var(--yellow-border);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 4px 12px rgba(68, 89, 117, 0.08);
+}
+
+.memo-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.memo-title {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--dark-blue);
+    letter-spacing: 0.5px;
+}
+
+/* ポップで可愛い「+ 追加」ボタン */
+.memo-add-btn {
+    background: #8298b0;
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(130, 152, 176, 0.3);
+    transition: all 0.2s ease;
+}
+
+.memo-add-btn:hover {
+    background: var(--dark-blue);
+    transform: translateY(-1px);
+}
+
+.memo-add-btn:active {
+    transform: translateY(1px);
+}
+
+.memo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.memo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(184, 204, 223, 0.6);
+    padding: 6px 8px;
+    border-radius: 10px;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.memo-delete-btn {
+    margin-left: auto;
+    background: #fde8e8;
+    border: none;
+    color: #d9534f;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.memo-delete-btn:hover {
+    background: #d9534f;
+    color: #ffffff;
+}
+
+/* --- メモ追加モーダル（入力ポップアップ）の可愛い手帳風デザイン --- */
+.memo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    color: var(--dark-blue);
+    font-weight: bold;
+}
+
+.form-group input {
+    padding: 8px 12px;
+    border: 1.5px solid #b8ccdf;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    background: #ffffff;
+    color: var(--text-dark);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+    border-color: var(--dark-blue);
+    box-shadow: 0 0 0 3px rgba(108, 132, 166, 0.15);
+}
+
+/* モーダル内の「追加する」ボタン */
+#memo-save-btn {
+    width: 100%;
+    margin-top: 6px;
+    background: var(--dark-blue);
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(68, 89, 117, 0.25);
+    transition: all 0.2s ease;
+}
+
+#memo-save-btn:hover {
+    background: #324258;
+    transform: translateY(-1px);
+}
 
 .hidden {
     display: none !important;
