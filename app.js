@@ -329,3 +329,106 @@ function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+// --- 自分で追加できるメモ機能 ---
+document.addEventListener("DOMContentLoaded", () => {
+    initMemoApp();
+});
+
+function initMemoApp() {
+    const openBtn = document.getElementById("open-memo-modal");
+    const closeBtn = document.getElementById("memo-modal-close");
+    const overlay = document.getElementById("memo-modal-overlay");
+    const saveBtn = document.getElementById("memo-save-btn");
+
+    if (openBtn) {
+        openBtn.addEventListener("click", () => overlay.classList.remove("hidden"));
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => overlay.classList.add("hidden"));
+    }
+    if (overlay) {
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) overlay.classList.add("hidden");
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener("click", () => {
+            const title = document.getElementById("memo-input-title").value.trim();
+            const date = document.getElementById("memo-input-date").value.trim();
+            const badge = document.getElementById("memo-input-badge").value.trim();
+
+            if (!title) {
+                alert("タイトルを入力してください");
+                return;
+            }
+
+            addMemoItem({ title, date, badge });
+            
+            // 入力欄をクリアしてモーダルを閉じる
+            document.getElementById("memo-input-title").value = "";
+            document.getElementById("memo-input-date").value = "";
+            document.getElementById("memo-input-badge").value = "";
+            overlay.classList.add("hidden");
+        });
+    }
+
+    renderMemos();
+}
+
+function getStoredMemos() {
+    const data = localStorage.getItem("custom_memos");
+    if (data) {
+        try { return JSON.parse(data); } catch(e) { return []; }
+    }
+    // 初期データのサンプル
+    return [
+        { title: "ライブ追加グッズ受注販売", date: "10/25 (日) 23:59", badge: "あと6日" },
+        { title: "にじUFJ", date: "11/6 (金) 23:59", badge: "あと18日" }
+    ];
+}
+
+function saveStoredMemos(memos) {
+    localStorage.setItem("custom_memos", JSON.stringify(memos));
+}
+
+function addMemoItem(memo) {
+    const memos = getStoredMemos();
+    memos.push(memo);
+    saveStoredMemos(memos);
+    renderMemos();
+}
+
+function deleteMemoItem(index) {
+    const memos = getStoredMemos();
+    memos.splice(index, 1);
+    saveStoredMemos(memos);
+    renderMemos();
+}
+
+function renderMemos() {
+    const container = document.getElementById("memo-list-container");
+    if (!container) return;
+
+    const memos = getStoredMemos();
+    container.innerHTML = "";
+
+    if (memos.length === 0) {
+        container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-sub); text-align:center; padding:6px;">メモはありません</div>`;
+        return;
+    }
+
+    memos.forEach((m, index) => {
+        const item = document.createElement("div");
+        item.className = "memo-item";
+        item.innerHTML = `
+            <span class="due-badge">${escapeHtml(m.badge || "メモ")}</span>
+            <div class="memo-content">
+                <strong>${escapeHtml(m.title)}</strong>
+                <small>${escapeHtml(m.date)}</small>
+            </div>
+            <button class="memo-delete-btn" onclick="deleteMemoItem(${index})">&times;</button>
+        `;
+        container.appendChild(item);
+    });
+}
