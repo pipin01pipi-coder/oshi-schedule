@@ -244,9 +244,22 @@ function renderWeekView() {
                     card.style.height = `${heightPx}px`;
                     if (v.thumbnails) card.style.backgroundImage = `url(${v.thumbnails})`;
 
-                    const timeStr = `${String(currentSegmentStart.getHours()).padStart(2,'0')}:${String(currentSegmentStart.getMinutes()).padStart(2,'0')}`;
+                    // ★【ここを修正】本来の配信開始時刻と一致する場合のみ「22:59」等の時刻タグを表示し、
+                    // 深夜0:00から始まる「引き継ぎ枠」の場合は時刻タグを出さない（または「続き」にする）
+                    const isOriginalStart = currentSegmentStart.getTime() === startDate.getTime();
+                    
+                    let timeTagHtml = "";
+                    if (isOriginalStart) {
+                        const timeStr = `${String(currentSegmentStart.getHours()).padStart(2,'0')}:${String(currentSegmentStart.getMinutes()).padStart(2,'0')}`;
+                        timeTagHtml = `<div class="time-tag">${timeStr}</div>`;
+                    } else {
+                        // パターンBにしたい場合は↓のコメントを外してこちらに切り替えできます
+                        // timeTagHtml = `<div class="time-tag" style="background:rgba(255,255,255,0.85); color:#6c84a6;">続き</div>`;
+                        timeTagHtml = ""; 
+                    }
+
                     card.innerHTML = `
-                        <div class="time-tag">${timeStr}</div>
+                        ${timeTagHtml}
                         <div class="title-txt">${escapeHtml(v.title)}</div>
                     `;
                     card.addEventListener("click", () => openModal(v));
