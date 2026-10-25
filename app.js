@@ -83,13 +83,29 @@ function render() {
     }
 }
 
+// 動画タイトルからプレイしているゲームを自動判別
 function categorizeTitle(title) {
+    if (!title) return "その他";
     const t = title.toUpperCase();
-    if (t.includes("OW") || t.includes("OVERWATCH")) return "OW";
+
+    // ゲームタイトル判定ロジック（よくプレイされるタイトルを網羅）
+    if (t.includes("OW") || t.includes("OVERWATCH") || t.includes("オーバーウォッチ")) return "OW";
     if (t.includes("APEX")) return "APEX";
-    if (t.includes("VALORANT")) return "VALORANT";
-    if (t.includes("スプラ")) return "スプラ";
-    return "配信";
+    if (t.includes("VALORANT") || t.includes("ヴァロ") || t.includes("VALO")) return "VALORANT";
+    if (t.includes("スプラ") || t.includes("SPLATOON")) return "スプラ";
+    if (t.includes("PUBG")) return "PUBG";
+    if (t.includes("LOL") || t.includes("LEAGUE OF LEGENDS") || t.includes("リーグ・オブ・レジェンド") || t.includes("LTK")) return "LoL";
+    if (t.includes("GTA") || t.includes("グラセフ") || t.includes("VCR")) return "GTA";
+    if (t.includes("マイクラ") || t.includes("MINECRAFT")) return "マイクラ";
+    if (t.includes("ポケモン") || t.includes("POKEMON")) return "ポケモン";
+    if (t.includes("スト6") || t.includes("SF6") || t.includes("STREET FIGHTER")) return "スト6";
+
+    // 雑談・歌・同時視聴系
+    if (t.includes("雑談") || t.includes("メン限") || t.includes("告知")) return "雑談";
+    if (t.includes("同時視聴") || t.includes("WATCH PARTY")) return "同時視聴";
+    if (t.includes("歌") || t.includes("SINGING") || t.includes("歌枠")) return "歌枠";
+
+    return "その他";
 }
 
 function renderStats() {
@@ -114,7 +130,10 @@ function renderStats() {
     const tagsContainer = document.getElementById("game-tags-container");
     if (tagsContainer) {
         tagsContainer.innerHTML = "";
-        Object.entries(gameMinutes).forEach(([game, mins]) => {
+        // 時間が多い順に並び替えてタグを生成
+        const sortedGames = Object.entries(gameMinutes).sort((a, b) => b[1] - a[1]);
+
+        sortedGames.forEach(([game, mins]) => {
             const hours = (mins / 60).toFixed(1);
             const tag = document.createElement("div");
             tag.className = "game-tag";
@@ -124,7 +143,7 @@ function renderStats() {
     }
 }
 
-// 週表示：日付をまたぐ配信をそれぞれの日の列に分割して正しく描画する
+// 週表示（深夜0時またぎ対応 & ゲームごとの時間集計）
 function renderWeekView() {
     const startOfWeek = getStartOfWeek(new Date(currentDate));
     const endOfWeek = new Date(startOfWeek);
@@ -166,7 +185,6 @@ function renderWeekView() {
     if (grid) {
         grid.innerHTML = "";
         
-        // 7日分の列を作成
         const cols = [];
         for (let i = 0; i < 7; i++) {
             const colDate = new Date(startOfWeek);
@@ -178,13 +196,12 @@ function renderWeekView() {
             grid.appendChild(col);
         }
 
-        // 各動画を走査し、日付をまたぐ場合はそれぞれの日の列に分割して配置
+        // 動画を各曜日の列に配置（24時またぎ対応）
         allVideos.forEach(v => {
             const startDate = new Date(v.publishedAt);
             const durationMins = v.durationMinutes || 120;
             const endDate = new Date(startDate.getTime() + durationMins * 60000);
 
-            // この動画がまたぐ可能性のある日を順番に処理
             let currentSegmentStart = new Date(startDate);
 
             while (currentSegmentStart < endDate) {
@@ -192,19 +209,15 @@ function renderWeekView() {
                 const month = currentSegmentStart.getMonth();
                 const date = currentSegmentStart.getDate();
 
-                // その日の24時（翌日の0時0分）を設定
                 const nextMidnight = new Date(year, month, date + 1, 0, 0, 0);
                 const segmentEnd = endDate < nextMidnight ? endDate : nextMidnight;
-
-                // セグメントの長さ（分）
                 const segmentMins = (segmentEnd - currentSegmentStart) / 60000;
 
-                // 該当する日の列を探す
                 const targetColObj = cols.find(c => c.date.toDateString() === new Date(year, month, date).toDateString());
 
                 if (targetColObj && segmentMins > 0) {
                     const startHour = currentSegmentStart.getHours() + (currentSegmentStart.getMinutes() / 60);
-                    const topPx = startHour * 40; // 1時間 = 40px
+                    const topPx = startHour * 40;
                     const heightPx = Math.max(25, (segmentMins / 60) * 40);
 
                     const card = document.createElement("div");
@@ -222,7 +235,6 @@ function renderWeekView() {
                     targetColObj.element.appendChild(card);
                 }
 
-                // 次のセグメントの開始を翌日の0時に設定
                 currentSegmentStart = nextMidnight;
             }
         });
@@ -263,7 +275,7 @@ function renderMonthView() {
             if (dayVideos.length > 0 && dayVideos[0].thumbnails) {
                 const img = document.createElement("img");
                 img.className = "m-thumb";
-                img.src = dayVideos.thumbnails;
+                img.src = dayVideos[0].thumbnails;
                 img.addEventListener("click", () => openModal(dayVideos[0]));
                 cell.appendChild(img);
             }
@@ -301,7 +313,7 @@ function openModal(video) {
     document.getElementById("modal-link").href = `https://www.youtube.com/watch?v=${video.id}`;
 
     const badges = document.getElementById("modal-badges");
-    badges.innerHTML = `<span class="modal-badge">${cat}</span>`;
+    if (badges) badges.innerHTML = `<span class="modal-badge">${cat}</span>`;
 
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
