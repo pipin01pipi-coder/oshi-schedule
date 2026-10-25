@@ -85,14 +85,13 @@ function render() {
 
 function categorizeTitle(title) {
     const t = title.toUpperCase();
-    if (t.includes("OW") || t.includes("OVERWATCH") || t.includes("オーバーウォッチ")) return "OW";
+    if (t.includes("OW") || t.includes("OVERWATCH")) return "OW";
     if (t.includes("APEX")) return "APEX";
-    if (t.includes("VALORANT") || t.includes("ヴァロ")) return "VALORANT";
+    if (t.includes("VALORANT")) return "VALORANT";
     if (t.includes("スプラ")) return "スプラ";
     return "配信";
 }
 
-// 実際の配信分（durationMinutes）に基づく正確な合計時間の算出
 function renderStats() {
     const countEl = document.getElementById("stat-count");
     const hoursEl = document.getElementById("stat-hours");
@@ -125,7 +124,7 @@ function renderStats() {
     }
 }
 
-// 週表示 (バーティカルの高さと位置を実際の配信時間から算出)
+// 週表示：日付をまたぐ配信をそれぞれの日の列に分割して正しく描画する
 function renderWeekView() {
     const startOfWeek = getStartOfWeek(new Date(currentDate));
     const endOfWeek = new Date(startOfWeek);
@@ -156,14 +155,9 @@ function renderWeekView() {
             const d = new Date(startOfWeek);
             d.setDate(d.getDate() + i);
 
-            // その日の合計配信時間を計算してヘッダーに表示
-            const dayVideos = allVideos.filter(v => new Date(v.publishedAt).toDateString() === d.toDateString());
-            const dayMins = dayVideos.reduce((sum, v) => sum + (v.durationMinutes || 120), 0);
-            const dayHoursStr = dayMins > 0 ? `${(dayMins / 60).toFixed(1)}h` : '';
-
             const div = document.createElement("div");
             div.className = "day-cell";
-            div.innerHTML = `<div class="num">${d.getDate()}</div><div class="sub">${days[i]}</div><div class="sub">${dayHoursStr}</div>`;
+            div.innerHTML = `<div class="num">${d.getDate()}</div><div class="sub">${days[i]}</div>`;
             headerRow.appendChild(div);
         }
     }
@@ -171,48 +165,67 @@ function renderWeekView() {
     const grid = document.getElementById("week-grid");
     if (grid) {
         grid.innerHTML = "";
+        
+        // 7日分の列を作成
+        const cols = [];
         for (let i = 0; i < 7; i++) {
             const colDate = new Date(startOfWeek);
             colDate.setDate(colDate.getDate() + i);
             
             const col = document.createElement("div");
             col.className = "week-col";
-
-            const dayVideos = allVideos.filter(v => {
-                const vd = new Date(v.publishedAt);
-                return vd.toDateString() === colDate.toDateString();
-            });
-
-            dayVideos.forEach(v => {
-                const vd = new Date(v.publishedAt);
-                const startHour = vd.getHours() + (vd.getMinutes() / 60);
-                
-                // 1時間 = 40px で計算 (40px/60分)
-                const topPx = startHour * 40;
-                
-                // 実際の配信分（durationMinutes）に応じた伸縮枠（最低40px）
-                const durationMins = v.durationMinutes || 120;
-                const heightPx = Math.max(30, (durationMins / 60) * 40);
-
-                const card = document.createElement("div");
-                card.className = "stream-card";
-                card.style.top = `${topPx}px`;
-                card.style.height = `${heightPx}px`;
-                if (v.thumbnails) card.style.backgroundImage = `url(${v.thumbnails})`;
-
-                const timeStr = `${String(vd.getHours()).padStart(2,'0')}:${String(vd.getMinutes()).padStart(2,'0')}`;
-                const hoursLenStr = `${(durationMins / 60).toFixed(1)}h`;
-
-                card.innerHTML = `
-                    <div class="time-tag">${timeStr} (${hoursLenStr})</div>
-                    <div class="title-txt">${escapeHtml(v.title)}</div>
-                `;
-                card.addEventListener("click", () => openModal(v));
-                col.appendChild(card);
-            });
-
+            cols.push({ date: colDate, element: col });
             grid.appendChild(col);
         }
+
+        // 各動画を走査し、日付をまたぐ場合はそれぞれの日の列に分割して配置
+        allVideos.forEach(v => {
+            const startDate = new Date(v.publishedAt);
+            const durationMins = v.durationMinutes || 120;
+            const endDate = new Date(startDate.getTime() + durationMins * 60000);
+
+            // この動画がまたぐ可能性のある日を順番に処理
+            let currentSegmentStart = new Date(startDate);
+
+            while (currentSegmentStart < endDate) {
+                const year = currentSegmentStart.getFullYear();
+                const month = currentSegmentStart.getMonth();
+                const date = currentSegmentStart.getDate();
+
+                // その日の24時（翌日の0時0分）を設定
+                const nextMidnight = new Date(year, month, date + 1, 0, 0, 0);
+                const segmentEnd = endDate < nextMidnight ? endDate : nextMidnight;
+
+                // セグメントの長さ（分）
+                const segmentMins = (segmentEnd - currentSegmentStart) / 60000;
+
+                // 該当する日の列を探す
+                const targetColObj = cols.find(c => c.date.toDateString() === new Date(year, month, date).toDateString());
+
+                if (targetColObj && segmentMins > 0) {
+                    const startHour = currentSegmentStart.getHours() + (currentSegmentStart.getMinutes() / 60);
+                    const topPx = startHour * 40; // 1時間 = 40px
+                    const heightPx = Math.max(25, (segmentMins / 60) * 40);
+
+                    const card = document.createElement("div");
+                    card.className = "stream-card";
+                    card.style.top = `${topPx}px`;
+                    card.style.height = `${heightPx}px`;
+                    if (v.thumbnails) card.style.backgroundImage = `url(${v.thumbnails})`;
+
+                    const timeStr = `${String(currentSegmentStart.getHours()).padStart(2,'0')}:${String(currentSegmentStart.getMinutes()).padStart(2,'0')}`;
+                    card.innerHTML = `
+                        <div class="time-tag">${timeStr}</div>
+                        <div class="title-txt">${escapeHtml(v.title)}</div>
+                    `;
+                    card.addEventListener("click", () => openModal(v));
+                    targetColObj.element.appendChild(card);
+                }
+
+                // 次のセグメントの開始を翌日の0時に設定
+                currentSegmentStart = nextMidnight;
+            }
+        });
     }
 }
 
@@ -250,7 +263,7 @@ function renderMonthView() {
             if (dayVideos.length > 0 && dayVideos[0].thumbnails) {
                 const img = document.createElement("img");
                 img.className = "m-thumb";
-                img.src = dayVideos[0].thumbnails;
+                img.src = dayVideos.thumbnails;
                 img.addEventListener("click", () => openModal(dayVideos[0]));
                 cell.appendChild(img);
             }
