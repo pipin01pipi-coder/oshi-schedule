@@ -340,30 +340,42 @@ function escapeHtml(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// --- 手動メモ管理機能 ---
+// --- 手動メモ管理機能（完全版） ---
 function initMemoApp() {
     const openBtn = document.getElementById("open-memo-modal");
     const closeBtn = document.getElementById("memo-modal-close");
     const overlay = document.getElementById("memo-modal-overlay");
     const saveBtn = document.getElementById("memo-save-btn");
 
-    if (openBtn) {
-        openBtn.addEventListener("click", () => overlay.classList.remove("hidden"));
+    if (openBtn && overlay) {
+        openBtn.addEventListener("click", () => {
+            overlay.classList.remove("hidden");
+        });
     }
-    if (closeBtn) {
-        closeBtn.addEventListener("click", () => overlay.classList.add("hidden"));
+
+    if (closeBtn && overlay) {
+        closeBtn.addEventListener("click", () => {
+            overlay.classList.add("hidden");
+        });
     }
+
     if (overlay) {
         overlay.addEventListener("click", (e) => {
-            if (e.target === overlay) overlay.classList.add("hidden");
+            if (e.target === overlay) {
+                overlay.classList.add("hidden");
+            }
         });
     }
 
     if (saveBtn) {
         saveBtn.addEventListener("click", () => {
-            const title = document.getElementById("memo-input-title").value.trim();
-            const date = document.getElementById("memo-input-date").value.trim();
-            const badge = document.getElementById("memo-input-badge").value.trim();
+            const titleInput = document.getElementById("memo-input-title");
+            const dateInput = document.getElementById("memo-input-date");
+            const badgeInput = document.getElementById("memo-input-badge");
+
+            const title = titleInput ? titleInput.value.trim() : "";
+            const date = dateInput ? dateInput.value.trim() : "";
+            const badge = badgeInput ? badgeInput.value.trim() : "";
 
             if (!title) {
                 alert("タイトルを入力してください");
@@ -372,10 +384,11 @@ function initMemoApp() {
 
             addMemoItem({ title, date, badge });
             
-            document.getElementById("memo-input-title").value = "";
-            document.getElementById("memo-input-date").value = "";
-            document.getElementById("memo-input-badge").value = "";
-            overlay.classList.add("hidden");
+            // 入力欄をクリアしてモーダルを閉じる
+            if (titleInput) titleInput.value = "";
+            if (dateInput) dateInput.value = "";
+            if (badgeInput) badgeInput.value = "";
+            if (overlay) overlay.classList.add("hidden");
         });
     }
 
@@ -387,6 +400,7 @@ function getStoredMemos() {
     if (data) {
         try { return JSON.parse(data); } catch(e) { return []; }
     }
+    // 初期データのサンプル
     return [
         { title: "ライブ追加グッズ受注販売", date: "10/25 (日) 23:59", badge: "あと6日" },
         { title: "にじUFJ", date: "11/6 (金) 23:59", badge: "あと18日" }
@@ -404,12 +418,13 @@ function addMemoItem(memo) {
     renderMemos();
 }
 
-function deleteMemoItem(index) {
+// 削除ボタンから呼び出せるようにグローバルに登録
+window.deleteMemoItem = function(index) {
     const memos = getStoredMemos();
     memos.splice(index, 1);
     saveStoredMemos(memos);
     renderMemos();
-}
+};
 
 function renderMemos() {
     const container = document.getElementById("memo-list-container");
@@ -432,7 +447,7 @@ function renderMemos() {
                 <strong>${escapeHtml(m.title)}</strong>
                 <small>${escapeHtml(m.date)}</small>
             </div>
-            <button class="memo-delete-btn" onclick="deleteMemoItem(${index})">&times;</button>
+            <button class="memo-delete-btn" type="button" onclick="deleteMemoItem(${index})">&times;</button>
         `;
         container.appendChild(item);
     });
