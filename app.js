@@ -28,6 +28,8 @@ function initUI() {
             if (e.target.id === "modal-overlay") closeModal();
         });
     }
+
+    initMemoApp();
 }
 
 function bindClick(id, fn) {
@@ -106,18 +108,34 @@ function categorizeTitle(title) {
     return "配信";
 }
 
-// 配信回数と実際の時間を正確に集計
+// 週の開始日（月曜日）を取得
+function getStartOfWeek(d) {
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+}
+
+// 【変更】現在表示している「週（7日間）」に含まれる配信だけに絞ってスタッツを集計
 function renderStats() {
     const countEl = document.getElementById("stat-count");
     const hoursEl = document.getElementById("stat-hours");
 
-    if (countEl) countEl.textContent = allVideos.length;
+    const startOfWeek = getStartOfWeek(new Date(currentDate));
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 7); // 週の終わり（次週の月曜0時）
+
+    // 表示中の週に含まれる動画のみ抽出
+    const weekVideos = allVideos.filter(v => {
+        const vd = new Date(v.publishedAt);
+        return vd >= startOfWeek && vd < endOfWeek;
+    });
+
+    if (countEl) countEl.textContent = weekVideos.length;
 
     let totalMinutes = 0;
     const gameMinutes = {};
 
-    allVideos.forEach(v => {
-        // durationMinutes が存在すればそれを使い、なければデフォルト120分(2時間)
+    weekVideos.forEach(v => {
         const mins = Number(v.durationMinutes) || 120;
         totalMinutes += mins;
 
@@ -125,12 +143,10 @@ function renderStats() {
         gameMinutes[cat] = (gameMinutes[cat] || 0) + mins;
     });
 
-    // 合計時間を「時間単位 (小数点1桁)」に変換して表示
     if (hoursEl) {
         hoursEl.textContent = (totalMinutes / 60).toFixed(1);
     }
 
-    // ゲームごとの集計タグを描画
     const tagsContainer = document.getElementById("game-tags-container");
     if (tagsContainer) {
         tagsContainer.innerHTML = "";
@@ -286,12 +302,6 @@ function renderMonthView() {
     }
 }
 
-function getStartOfWeek(d) {
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(d.setDate(diff));
-}
-
 function openModal(video) {
     const vd = new Date(video.publishedAt);
     const cat = categorizeTitle(video.title);
@@ -329,11 +339,8 @@ function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
-// --- 自分で追加できるメモ機能 ---
-document.addEventListener("DOMContentLoaded", () => {
-    initMemoApp();
-});
 
+// --- 手動メモ管理機能 ---
 function initMemoApp() {
     const openBtn = document.getElementById("open-memo-modal");
     const closeBtn = document.getElementById("memo-modal-close");
@@ -365,7 +372,6 @@ function initMemoApp() {
 
             addMemoItem({ title, date, badge });
             
-            // 入力欄をクリアしてモーダルを閉じる
             document.getElementById("memo-input-title").value = "";
             document.getElementById("memo-input-date").value = "";
             document.getElementById("memo-input-badge").value = "";
@@ -381,7 +387,6 @@ function getStoredMemos() {
     if (data) {
         try { return JSON.parse(data); } catch(e) { return []; }
     }
-    // 初期データのサンプル
     return [
         { title: "ライブ追加グッズ受注販売", date: "10/25 (日) 23:59", badge: "あと6日" },
         { title: "にじUFJ", date: "11/6 (金) 23:59", badge: "あと18日" }
